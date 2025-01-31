@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Untitled Terminal</title>
+  <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+  <style>
+    body {
+      background-color: black;
+      color: limegreen;
+      font-family: monospace;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #terminal {
+      width: 80%;
+      height: 80%;
+      overflow-y: auto;
+      border: 2px solid limegreen;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    #input-line {
+      display: flex;
+    }
+    #input {
+      background: none;
+      border: none;
+      color: limegreen;
+      outline: none;
+      flex-grow: 1;
+    }
+    .output {
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div id="terminal">
+    <div class="output">Welcome to the Virtual Terminal! Type 'help' for a list of commands.</div>
+    <div id="input-line">
+      <span>user@virtual-terminal:~$ </span>
+      <input type="text" id="input" autofocus>
+    </div>
+  </div>
+
+  <script>
+    const terminal = document.getElementById('terminal');
+    const input = document.getElementById('input');
+
+    // To-do list
+    let todoList = [];
+
+    // Games
+    const games = {
+      guess: () => {
+        const number = Math.floor(Math.random() * 100) + 1;
+        let attempts = 0;
+        const playGame = () => {
+          const guess = parseInt(prompt('Guess a number between 1 and 100:'));
+          if (isNaN(guess)) {
+            alert('Please enter a valid number!');
+            playGame();
+          } else {
+            attempts++;
+            if (guess < number) {
+              alert('Too low! Try again.');
+              playGame();
+            } else if (guess > number) {
+              alert('Too high! Try again.');
+              playGame();
+            } else {
+              alert(`Correct! You guessed the number in ${attempts} attempts.`);
+              return `Game over. You guessed the number in ${attempts} attempts.`;
+            }
+          }
+        };
+        playGame();
+        return 'Starting number guessing game...';
+      },
+      adventure: () => {
+        alert('Welcome to the Text Adventure Game!\nYou are in a dark forest. Type commands like "go north", "look around", or "take item".');
+        let location = 'forest';
+        let inventory = [];
+        const adventureCommands = {
+          'look around': () => {
+            if (location === 'forest') {
+              return 'You see tall trees and a path to the north.';
+            } else if (location === 'cave') {
+              return 'You are in a dark cave. There is a shiny object on the ground.';
+            }
+          },
+          'go north': () => {
+            if (location === 'forest') {
+              location = 'cave';
+              return 'You walk north and enter a dark cave.';
+            } else {
+              return 'You cannot go that way.';
+            }
+          },
+          'take item': () => {
+            if (location === 'cave') {
+              inventory.push('shiny object');
+              return 'You picked up a shiny object!';
+            } else {
+              return 'There is nothing to take here.';
+            }
+          },
+        };
+        const command = prompt('What do you want to do?');
+        if (adventureCommands[command]) {
+          return adventureCommands[command]();
+        } else {
+          return 'Invalid command.';
+        }
+      },
+    };
+
+    // Utilities
+    const utilities = {
+      calc: (expression) => {
+        try {
+          return `Result: ${eval(expression)}`;
+        } catch {
+          return 'Invalid expression.';
+        }
+      },
+      todo: (action, item) => {
+        if (action === 'add') {
+          todoList.push(item);
+          return `Added "${item}" to the to-do list.`;
+        } else if (action === 'list') {
+          return todoList.length ? todoList.join('\n') : 'Your to-do list is empty.';
+        } else if (action === 'remove') {
+          const index = parseInt(item) - 1;
+          if (index >= 0 && index < todoList.length) {
+            const removed = todoList.splice(index, 1);
+            return `Removed "${removed}" from the to-do list.`;
+          } else {
+            return 'Invalid index.';
+          }
+        } else {
+          return 'Usage: todo <add|list|remove> [item|index]';
+        }
+      },
+    };
+
+    // Commands
+    const commands = {
+      help: () => `Available commands:
+      - help: Show this help message
+      - clear: Clear the terminal
+      - game: Start a game (e.g., game guess, game adventure)
+      - calc <expression>: Perform a calculation
+      - todo <add|list|remove> [item|index]: Manage your to-do list
+      - easteregg: Find the hidden easter egg!`,
+      clear: () => {
+        terminal.innerHTML = '<div id="input-line"><span>user@virtual-terminal:~$ </span><input type="text" id="input" autofocus></div>';
+        input.focus();
+        return '';
+      },
+      game: (gameName) => {
+        if (games[gameName]) {
+          return games[gameName]();
+        } else {
+          return `Game not found: ${gameName}. Available games: ${Object.keys(games).join(', ')}`;
+        }
+      },
+      calc: (expression) => utilities.calc(expression),
+      todo: (action, item) => utilities.todo(action, item),
+      easteregg: () => 'You found the easter egg! 🎉',
+    };
+
+    // Input handling
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const inputText = input.value.trim();
+        input.value = '';
+        const [command, ...args] = inputText.split(' ');
+        let output = '';
+
+        if (commands[command]) {
+          output = commands[command](...args);
+        } else if (command) {
+          output = `Command not found: ${command}`;
+        }
+
+        if (output) {
+          const outputElement = document.createElement('div');
+          outputElement.className = 'output';
+          outputElement.textContent = output;
+          terminal.insertBefore(outputElement, terminal.querySelector('#input-line'));
+        }
+
+        terminal.scrollTop = terminal.scrollHeight;
+      }
+    });
+  </script>
+</body>
+</html>
